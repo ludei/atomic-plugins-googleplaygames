@@ -31,7 +31,7 @@ Cocoon.Social.GooglePlayGames class provides an easy to use social interface for
 
 Releases are deployed to Cordova Plugin Registry. You only have to install the desired plugins using Cordova CLI, CocoonJS CLI or Ludei's Cocoon.io Cloud Server.
 
-    cordova plugin add com.ludei.social.ios.GooglePlayGames;
+    cordova plugin add com.ludei.social.android.googleplaygames;
 
 The following JavaScript file is included automatically:
 
