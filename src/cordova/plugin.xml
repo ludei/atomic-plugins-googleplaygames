@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        id="com.ludei.social.android.googleplaygames" version="1.0.0">
+    <name>CocoonGooglePlayGames</name>
+    <description>Android Google Play Games API</description>
+    <license>MPL 2.0</license>
+    <keywords>cordova,Social,google,play,games,game,center,achievements,leaderboards,cocoon</keywords>
+    <platform name="android">
+        <preference name="APP_ID" />
+
+        <source-file src="src/android/GPGService.java" target-dir="src/com/ludei/googleplaygames" />
+        <source-file src="src/android/GPUtils.java" target-dir="src/com/ludei/googleplaygames" />
+        <source-file src="src/android/GPGPlugin.java" target-dir="src/com/ludei/googleplaygames/cordova" />
+
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="LDGooglePlayGamesPlugin" >
+                <param name="android-package" value="com.ludei.googleplaygames.cordova.GPGPlugin"/>
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <meta-data
+              android:name="com.google.android.gms.games.APP_ID"
+              android:value="@string/app_id" />
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+        </config-file>
+
+        <config-file target="res/values/strings.xml" parent="/resources">
+            <string name="app_id">$APP_ID</string>
+        </config-file>
+
+        <framework src="com.google.android.gms:play-services-games:7.5.0" />
+        <framework src="com.google.android.gms:play-services-plus:7.5.0" />
+
+        <js-module src="www/cocoon_googleplaygames.js" name="GooglePlayGames">
+            <runs/>
+        </js-module>
+
+    </platform>
+
+    <dependency id="com.ludei.social.common" />
+</plugin>
