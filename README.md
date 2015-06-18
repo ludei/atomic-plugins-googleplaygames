@@ -36,7 +36,7 @@ Releases are deployed to Cordova Plugin Registry. You only have to install the d
 The following JavaScript file is included automatically:
 
 [`cocoon_social.js`](https://github.com/ludei/atomic-plugins-social/blob/master/src/js/cocoon_social.js)
-[`cocoon_GooglePlayGames.js`](src/js/cocoon_GooglePlayGames.js)
+[`cocoon_googleplaygames.js`](src/js/cocoon_googleplaygames.js)
 
 ###Example
 
