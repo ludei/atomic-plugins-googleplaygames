@@ -6,15 +6,7 @@
     var Cocoon = window.Cocoon;
 
     /**
-     * This namespace represents all the basic functionalities available in the CocoonJS extension API.
-     *
-     * <div class="alert alert-success">
-     *   Here you will find a demo about this namespace: <a href="https://github.com/ludei/cocoonjs-demos/tree/Multiplayer">Multiplayer demo</a>.
-     *</div>
-     *
-     * <div class="alert alert-warning">
-     *    <strong>Warning!</strong> This JavaScript extension requires some configuration parameters on the <a href="https://ludei.zendesk.com/hc/en-us">cloud compiler</a>!
-     * </div>
+     * Cocoon Social Interface for the Google Play Games Extension.
      * @namespace Cocoon.Social.GooglePlayGames
      */
     Cocoon.define("Cocoon.Social", function(extension) {
