@@ -13,6 +13,7 @@ import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Result;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.GamesActivityResultCodes;
 import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
@@ -167,7 +168,14 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     public boolean handleActivityResult(final int requestCode, final int resultCode, final Intent data) {
 
         boolean managed = false;
-        if (requestCode == RESOLUTION_REQUEST_CODE) {
+        if ((requestCode == RESOLUTION_REQUEST_CODE || requestCode == GP_DIALOG_REQUEST_CODE) &&
+                resultCode == GamesActivityResultCodes.RESULT_RECONNECT_REQUIRED) {
+
+            //User signed out from the achievements/leaderboards settings in the upper right corner
+            this.logout(null);
+
+        }
+        else if (requestCode == RESOLUTION_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 client.connect();
             }
@@ -381,7 +389,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     }
 
     public void logout(CompletionCallback callback) {
-        if (client.isConnected()) {
+        if (client != null && client.isConnected()) {
             client.disconnect();
 
             if (trySilentAuthentication == true) {
