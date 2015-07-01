@@ -173,6 +173,11 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
             //User signed out from the achievements/leaderboards settings in the upper right corner
             this.logout(null);
+            if (intentCallback != null) {
+                intentCallback.onComplete(new Error("User signed out",  GamesActivityResultCodes.RESULT_RECONNECT_REQUIRED));
+                intentCallback = null;
+            }
+            managed = true;
 
         }
         else if (requestCode == RESOLUTION_REQUEST_CODE) {
@@ -183,6 +188,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 String errorString = resultCode == Activity.RESULT_CANCELED ? null : GPUtils.activityResponseCodeToString(resultCode);
                 processSessionChange(null, resultCode, errorString);
             }
+            managed = true;
 
         }
         else if (requestCode == GP_DIALOG_REQUEST_CODE) {
