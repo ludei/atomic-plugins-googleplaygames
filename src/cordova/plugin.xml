@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-        id="com.ludei.social.android.googleplaygames" version="1.0.4">
+        id="cocoon-plugin-social-android-googleplaygames" version="1.0.0">
     <name>CocoonGooglePlayGames</name>
     <description>Android Google Play Games API</description>
     <license>MPL 2.0</license>
@@ -45,5 +45,5 @@
 
     </platform>
 
-    <dependency id="com.ludei.social.common" />
+    <dependency id="cocoon-plugin-social-common" />
 </plugin>
