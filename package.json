@@ -13,8 +13,8 @@
     "type": "git",
     "url": "https://github.com/ludei/atomic-plugins-googleplaygames"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "ludei",
+  "license": "MPL 2.0",
   "devDependencies": {
     "gulp": "^3.8.10",
     "gulp-concat": "^2.5.2",
