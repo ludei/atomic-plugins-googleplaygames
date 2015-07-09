@@ -1,7 +1,7 @@
 (function() {
 
     if (window.cordova && typeof require !== 'undefined') {
-        cordova.require('com.ludei.social.common.Social'); //force dependency load
+        require('cocoon-plugin-social-common.Social'); //force dependency load
     }
     var Cocoon = window.Cocoon;
 

@@ -1,6 +1,6 @@
 {
   "name": "cocoon-plugin-social-android-googleplaygames",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Android Google Play Games API",
   "cordova": {
     "id": "cocoon-plugin-social-android-googleplaygames",
