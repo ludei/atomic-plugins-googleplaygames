@@ -182,6 +182,9 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         }
         else if (requestCode == RESOLUTION_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
+                if (client == null) {
+                    this.createClient();
+                }
                 client.connect();
             }
             else {
