@@ -334,7 +334,7 @@
                 this.gapi.auth.disconnect(callback);
             },
             getLoggedInUser : function() {
-                return this.gapi.currentPlayer ? fromGPUserToCocoonUser(this.gapi.currentPlayer) : null;
+                return this.gapi.currentPlayer ? fromGPPlayerToCocoonUser(this.gapi.currentPlayer) : null;
             },
             requestUser: function(callback, userId) {
                 var playerId = userId || "me";
