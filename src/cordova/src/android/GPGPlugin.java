@@ -102,7 +102,7 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
                 }
                 else {
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
                 }
 
             }
