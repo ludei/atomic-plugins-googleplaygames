@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" 
-        id="cocoon-plugin-social-android-googleplaygames" version="1.0.5">
+        id="cocoon-plugin-social-android-googleplaygames" version="1.0.6">
     <name>CocoonGooglePlayGames</name>
     <description>Android Google Play Games API</description>
     <license>MPL 2.0</license>
@@ -36,8 +36,8 @@
             <string name="app_id">$APP_ID</string>
         </config-file>
 
-        <framework src="com.google.android.gms:play-services-games:7.5.0" />
-        <framework src="com.google.android.gms:play-services-plus:7.5.0" />
+        <framework src="com.google.android.gms:play-services-games:8.3.0" />
+        <framework src="com.google.android.gms:play-services-plus:8.3.0" />
 
         <js-module src="www/cocoon_googleplaygames.js" name="GooglePlayGames">
             <runs/>
