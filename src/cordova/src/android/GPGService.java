@@ -342,9 +342,14 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
     private String getMyId() {
         if (isLoggedIn()) {
-            Person p = Plus.PeopleApi.getCurrentPerson(client);
-            if (p != null) {
-                return p.getId();
+            try {
+                Person p = Plus.PeopleApi.getCurrentPerson(client);
+                if (p != null) {
+                    return p.getId();
+                }
+
+            } catch(IllegalStateException e) {
+                e.printStackTrace();
             }
         }
 
