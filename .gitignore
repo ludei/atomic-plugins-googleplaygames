@@ -53,4 +53,4 @@ build/
 
 node_modules
 
-dist/cpp
+dist
