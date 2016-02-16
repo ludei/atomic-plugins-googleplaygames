@@ -13,8 +13,10 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 
 public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallback, GPGService.WillStartActivityCallback {
@@ -60,11 +62,25 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
 
     @SuppressWarnings("unused")
     public void init(CordovaArgs args, CallbackContext ctx) throws JSONException {
+
+        JSONObject params = args.optJSONObject(0);
+        String[] scopes = null;
+        if (params != null) {
+            JSONArray array = params.optJSONArray("scopes");
+            if (array != null) {
+                scopes = new String[array.length()];
+                for (int i = 0; i < array.length(); ++i) {
+                    scopes[i] = array.getString(i);
+                }
+            }
+        }
+
+
         _service.setSessionListener(this);
         _service.setWillStartActivityListener(this);
         _service.setExecutor(cordova.getThreadPool());
-        _service.init();
-        ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+        _service.init(scopes);
+        ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
     }
 
     @SuppressWarnings("unused")
@@ -100,9 +116,8 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
 
                 if (error != null) {
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
-                }
-                else {
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+                } else {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
                 }
 
             }
@@ -158,8 +173,7 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
             public void onComplete(JSONObject responseJSON, GPGService.Error error) {
 
                 JSONObject data = new JSONObject();
-                try
-                {
+                try {
                     if (responseJSON != null) {
                         data.put("response", responseJSON);
                     }
@@ -167,8 +181,7 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
                         data.put("error", new JSONObject(error.toMap()));
                     }
 
-                }
-                catch (JSONException ex) {
+                } catch (JSONException ex) {
                     ex.printStackTrace();
                 }
                 ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, data));
@@ -190,9 +203,8 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
             public void onComplete(GPGService.Error error) {
                 if (error != null) {
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
-                }
-                else {
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+                } else {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
                 }
             }
         });
@@ -207,9 +219,8 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
             public void onComplete(GPGService.Error error) {
                 if (error != null) {
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
-                }
-                else {
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+                } else {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
                 }
             }
         });
@@ -225,7 +236,7 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
                 } else {
                     String str = null;
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
                 }
             }
         });
@@ -241,14 +252,81 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
             public void onComplete(GPGService.Error error) {
                 if (error != null) {
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
-                }
-                else {
-                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String)null));
+                } else {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
                 }
             }
         });
     }
 
+
+    protected void notifySavedGameCallback(GPGService.GameSnapshot data, GPGService.Error error, CallbackContext ctx) {
+        ArrayList<PluginResult> args = new ArrayList<PluginResult>();
+        if (data != null) {
+            args.add(new PluginResult(PluginResult.Status.OK, new JSONObject(data.toMap())));
+        } else {
+            args.add(new PluginResult(PluginResult.Status.OK, (String) null)); //null value
+        }
+
+        if (error != null) {
+            args.add(new PluginResult(PluginResult.Status.OK, new JSONObject(error.toMap())));
+        }
+        ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, args));
+    }
+
+    @SuppressWarnings("unused")
+    public void loadSavedGame(CordovaArgs args, final CallbackContext ctx) throws JSONException {
+
+        String identifier = args.getString(0);
+        _service.loadSavedGame(identifier, new GPGService.SavedGameCallback() {
+            @Override
+            public void onComplete(GPGService.GameSnapshot data, GPGService.Error error) {
+                notifySavedGameCallback(data, error, ctx);
+            }
+        });
+    }
+
+    @SuppressWarnings("unused")
+    public void writeSavedGame(CordovaArgs args, final CallbackContext ctx) throws JSONException {
+
+        JSONObject data = args.getJSONObject(0);
+        GPGService.GameSnapshot snapshot = GPGService.GameSnapshot.fromJSONObject(data);
+
+        _service.writeSavedGame(snapshot, new GPGService.CompletionCallback() {
+            @Override
+            public void onComplete(GPGService.Error error) {
+                if (error != null) {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
+                } else {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, (String) null));
+                }
+            }
+        });
+    }
+
+    @SuppressWarnings("unused")
+    public void showSavedGames(CordovaArgs args, final CallbackContext ctx) throws JSONException {
+
+        _service.showSavedGames(new GPGService.SavedGameCallback() {
+            @Override
+            public void onComplete(GPGService.GameSnapshot data, GPGService.Error error) {
+                notifySavedGameCallback(data, error, ctx);
+            }
+        });
+    }
+
+
+    @SuppressWarnings("unused")
+    public void submitEvent(CordovaArgs args, final CallbackContext ctx) throws JSONException {
+
+        String eventId = args.getString(0);
+        int increment = args.optInt(1);
+        if (increment == 0) {
+            increment  = 1;
+        }
+       _service.submitEvent(eventId, increment);
+        ctx.success();
+    }
 
 
     //Session Listener

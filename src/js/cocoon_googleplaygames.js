@@ -80,6 +80,7 @@
              * @param {Object} params Initialization options.
              * @param {string} params.clientId The application clientID. Omit if its already provided in the native application via cloud configuration.
              * @param {string} params.defaultLeaderboard The default leaderboard ID. You can omit it if you specify the leaderboardID in all the score queries or submits.
+             * @param {array} params.scopes Additional scope identifiers. Plus & Games APIs are included by default. To use cloud saved game include the 'https://www.googleapis.com/auth/drive.appdata' scope.
              * @param {boolean} params.showAchievementNotifications Enables or disables the native view notifications when an achievement is unlocked.
              * @param {function} callback The initialization completed callback. Received params: error
              */
@@ -170,7 +171,71 @@
              */
             share: function() {
                 window.open(this.href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
-            }
+            },
+
+
+            /**
+             * Submit event
+             * @param {string} eventId
+             * @param {number} increment
+             */
+            submitEvent: function(eventId, increment) {
+
+                if (this.nativeAvailable) {
+                    Cocoon.exec(this.serviceName, "submitEvent", [eventId, increment], null, null);
+                }
+                else {
+                    //TODO
+                }
+            },
+
+            /**
+             * Loads a Saved Game Snapshot from the cloud
+             * @param identifier snapshot identifier
+             * @param {Function} callback The callback function. It receives the following parameters:
+             * - Snapshot: Object with the title, description adn identifier of the snapshort. The data property contains the raw bytes converted to string.
+             * - Error.
+             */
+            loadSavedGame: function(identifier, callback) {
+
+                if (this.nativeAvailable) {
+                    Cocoon.exec(this.serviceName, "loadSavedGame", [identifier], callback, callback);
+                }
+                else {
+                    //TODO
+                }
+             },
+
+            /**
+             * Writes a SavedGame Snapshot to the cloud
+             * @param snapshot snapshot object to store. An object with identifier, title, description and data properties. New snapshot is created if the identifier is a new one.
+             * @param {Function} callback The callback function. It receives the following parameters:
+             * - Error.
+             */
+            writeSavedGame: function(snapshot, callback) {
+
+                if (this.nativeAvailable) {
+                    Cocoon.exec(this.serviceName, "writeSavedGame", [snapshot], callback, callback);
+                }
+                else {
+                    //TODO
+                }
+             },
+
+             /**
+             * Show Google Play saved games activity and allows the user to choose a saved game or to create a new one
+             * @param {Function} callback The callback function. It receives the following parameters:
+             * - Snapshot: The selected snapshot metada, use loadSavedGame to fetch its data. If the user creates a new snapshot the idenfier will be empty.
+             * - Error.
+             */
+            showSavedGames: function(callback) {
+                if (this.nativeAvailable) {
+                    Cocoon.exec(this.serviceName, "showSavedGames", [], callback, callback);
+                }
+                else {
+                    //TODO
+                }
+             },
 
         };
 

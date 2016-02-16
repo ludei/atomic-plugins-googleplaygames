@@ -3,13 +3,15 @@ package com.ludei.googleplaygames;
 
 import android.app.Activity;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.Scopes;
 import com.google.android.gms.games.GamesActivityResultCodes;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 public class GPUtils
 {
-    public static String scopeArrayToString(String[] scopes)
+    public static String scopeArrayToString(Collection<String> scopes)
     {
         String scope = "";
         for(String str: scopes) {
@@ -38,6 +40,10 @@ public class GPUtils
                 return true;
 
         return false;
+    }
+
+    public static boolean isEmpty(String value) {
+        return value == null || value.length() == 0;
     }
 
     public static String errorCodeToString(int errorCode) {
@@ -91,5 +97,12 @@ public class GPUtils
             default:
                 return String.valueOf(respCode);
         }
+    }
+
+    public static String mapScope(String value) {
+        if (value.contains("appfolder")) {
+            return Scopes.DRIVE_APPFOLDER;
+        }
+        return value;
     }
 }
