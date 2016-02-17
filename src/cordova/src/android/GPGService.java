@@ -164,7 +164,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
     protected Activity activity;
     protected GoogleApiClient client;
-    protected static final String[] defaultScopes = new String[]{Scopes.GAMES, Scopes.PLUS_LOGIN};
+    protected static final String[] defaultScopes = new String[]{Scopes.GAMES, Scopes.PLUS_LOGIN, Scopes.DRIVE_APPFOLDER};
     protected ArrayList<String> scopes = new ArrayList<String>();
     protected String[] extraScopes = null;
     protected CompletionCallback intentCallback;
@@ -298,13 +298,15 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         builder.addApi(Plus.API);
         builder.addScope(Plus.SCOPE_PLUS_LOGIN);
         builder.addScope(Plus.SCOPE_PLUS_PROFILE);
-        if (extraScopes != null) {
+        builder.addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER);
+        //TODO: handle extra scopes
+        /*if (extraScopes != null) {
             for (String str: extraScopes) {
                 if (str.equalsIgnoreCase(Drive.SCOPE_APPFOLDER.toString()) || str.toLowerCase().contains("appfolder")) {
                     builder.addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER);
                 }
             }
-        }
+        }*/
 
         client = builder.build();
     }
@@ -471,7 +473,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
         //check if a user wants a scope that it not already set in the GameClient
 
-        boolean recreateClient = false;
+        /*boolean recreateClient = false;
         if (userScopes != null) {
             for (String scope: userScopes) {
                 String value = GPUtils.mapScope(scope);
@@ -481,9 +483,9 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 }
 
             }
-        }
+        }*/
 
-        if (client == null || recreateClient) {
+        if (client == null) { // || recreateClient) {
             this.createClient();
         }
 
@@ -685,28 +687,34 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     }
 
     public void loadSavedGame(final String snapshotName, final SavedGameCallback callback) {
-        PendingResult<Snapshots.OpenSnapshotResult> pendingResult = Games.Snapshots.open(client, snapshotName, false);
-        ResultCallback<Snapshots.OpenSnapshotResult> cb =
-                new ResultCallback<Snapshots.OpenSnapshotResult>() {
-                    @Override
-                    public void onResult(Snapshots.OpenSnapshotResult openSnapshotResult) {
-                        if (openSnapshotResult.getStatus().isSuccess()) {
-                            try {
-                                Snapshot snapshot = openSnapshotResult.getSnapshot();
-                                byte[] data = openSnapshotResult.getSnapshot().getSnapshotContents().readFully();
-                                GameSnapshot result = GameSnapshot.fromMetadata(snapshot.getMetadata(), data);
+        try {
+            PendingResult<Snapshots.OpenSnapshotResult> pendingResult = Games.Snapshots.open(client, snapshotName, false);
+            ResultCallback<Snapshots.OpenSnapshotResult> cb =
+                    new ResultCallback<Snapshots.OpenSnapshotResult>() {
+                        @Override
+                        public void onResult(Snapshots.OpenSnapshotResult openSnapshotResult) {
+                            if (openSnapshotResult.getStatus().isSuccess()) {
+                                try {
+                                    Snapshot snapshot = openSnapshotResult.getSnapshot();
+                                    byte[] data = openSnapshotResult.getSnapshot().getSnapshotContents().readFully();
+                                    GameSnapshot result = GameSnapshot.fromMetadata(snapshot.getMetadata(), data);
+                                    callback.onComplete(result, null);
+                                }
+                                catch (IOException e) {
+                                    callback.onComplete(null, new Error("Exception reading snapshot: " + e.getMessage(), 3));
+                                }
                             }
-                            catch (IOException e) {
-                                callback.onComplete(null, new Error("Exception reading snapshot: " + e.getMessage(), 0));
+                            else {
+                                callback.onComplete(null, new Error("Failed to load snapshot", 11));
                             }
-                        }
-                        else {
-                            callback.onComplete(null, new Error("Failed to load snapshot", 0));
-                        }
 
-                    }
-                };
-        pendingResult.setResultCallback(cb);
+                        }
+                    };
+            pendingResult.setResultCallback(cb);
+        }
+        catch (Exception ex) {
+            callback.onComplete(null, new Error(ex.getLocalizedMessage(), 0));
+        }
     }
 
     public void writeSavedGame(final GameSnapshot snapshotData, final CompletionCallback callback) {
