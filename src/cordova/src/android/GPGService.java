@@ -1,12 +1,16 @@
 package com.ludei.googleplaygames;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -16,6 +20,8 @@ import com.google.android.gms.drive.Drive;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesActivityResultCodes;
 import com.google.android.gms.games.GamesStatusCodes;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
+import com.google.android.gms.games.leaderboard.Leaderboards;
 import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.snapshot.Snapshot;
@@ -26,6 +32,7 @@ import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusShare;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.ludei.multiplayer.MultiplayerMatch;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,7 +45,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -150,6 +156,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
     private static final int GP_DIALOG_REQUEST_CODE = 0x000000000001112;
     private static final int RESOLUTION_REQUEST_CODE = 0x00000000001113;
+    private static final int GP_ERROR_DIALOG_REQUEST_CODE = 0x00000000001114;
     private static final int GP_SAVED_GAMES_REQUEST_CODE = 0x000000000001117;
     private static final String GP_SIGNED_IN_PREFERENCE = "gp_signedIn";
 
@@ -161,12 +168,14 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     public static GoogleApiClient getGoogleAPIClient() {
         return sharedInstance != null? sharedInstance.client : null;
     }
+    public static GPGService currentInstance() {
+        return sharedInstance;
+    }
 
     protected Activity activity;
     protected GoogleApiClient client;
-    protected static final String[] defaultScopes = new String[]{Scopes.GAMES, Scopes.PLUS_LOGIN, Scopes.DRIVE_APPFOLDER};
+    protected static final String[] defaultScopes = new String[]{Scopes.GAMES, Scopes.PLUS_LOGIN};
     protected ArrayList<String> scopes = new ArrayList<String>();
-    protected String[] extraScopes = null;
     protected CompletionCallback intentCallback;
     protected SavedGameCallback intentSavedGameCallback;
     protected ArrayList<SessionCallback> loginCallbacks = new ArrayList<SessionCallback>();
@@ -175,6 +184,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     protected WillStartActivityCallback willStartListener;
     protected boolean trySilentAuthentication = false;
     protected Executor executor;
+    protected Runnable errorDialogCallback;
 
     public GPGService(Activity activity)
     {
@@ -199,10 +209,16 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
                 }
             }
         }
-        this.createClient();
-        if (this.trySilentAuthentication) {
-            client.connect();
+        if (this.isAvailable()) {
+            this.createClient();
+            if (this.trySilentAuthentication) {
+                client.connect();
+            }
         }
+    }
+
+    public boolean isAvailable() {
+        return  GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this.activity) == ConnectionResult.SUCCESS;
     }
 
     public void destroy()
@@ -264,6 +280,11 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
             managed = true;
 
         }
+        else if (requestCode == GP_ERROR_DIALOG_REQUEST_CODE) {
+            if (errorDialogCallback != null) {
+                errorDialogCallback.run();
+            }
+        }
         else if (requestCode == GP_SAVED_GAMES_REQUEST_CODE && intentSavedGameCallback != null) {
             if (resultCode == Activity.RESULT_CANCELED) {
                 intentSavedGameCallback.onComplete(null, null);
@@ -298,15 +319,14 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         builder.addApi(Plus.API);
         builder.addScope(Plus.SCOPE_PLUS_LOGIN);
         builder.addScope(Plus.SCOPE_PLUS_PROFILE);
-        builder.addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER);
-        //TODO: handle extra scopes
-        /*if (extraScopes != null) {
-            for (String str: extraScopes) {
+        //TODO: better way to handle extra scopes
+        if (scopes != null) {
+            for (String str: scopes) {
                 if (str.equalsIgnoreCase(Drive.SCOPE_APPFOLDER.toString()) || str.toLowerCase().contains("appfolder")) {
                     builder.addApi(Drive.API).addScope(Drive.SCOPE_APPFOLDER);
                 }
             }
-        }*/
+        }
 
         client = builder.build();
     }
@@ -327,7 +347,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
         ArrayList<SessionCallback> callbacks;
         synchronized (loginCallbacks) {
-            callbacks = (ArrayList<SessionCallback>)loginCallbacks.clone();
+            callbacks = new ArrayList<SessionCallback>(loginCallbacks);
             loginCallbacks.clear();
         }
 
@@ -453,8 +473,48 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         return null;
     }
 
-    public void login(String[] userScopes, SessionCallback callback)
+    public void login(final String[] userScopes, final SessionCallback callback)
     {
+
+        final int errorCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this.activity);
+        if (errorCode != ConnectionResult.SUCCESS) {
+
+            if (GoogleApiAvailability.getInstance().isUserResolvableError(errorCode)) {
+                errorDialogCallback = new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isAvailable()) {
+                            login(userScopes, callback);
+                        }
+                        else if (callback != null) {
+                            callback.onComplete(null, null);
+                        }
+                    }
+                };
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(activity, errorCode, GP_ERROR_DIALOG_REQUEST_CODE);
+                        dialog.setCancelable(true);
+                        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                errorDialogCallback = null;
+                                if (callback != null) {
+                                    callback.onComplete(null, null);
+                                }
+                            }
+                        });
+                        dialog.show();
+                    }
+                });
+
+            }
+            else if (callback != null) {
+                callback.onComplete(null, new Error(GPUtils.errorCodeToString(errorCode), errorCode));
+            }
+            return;
+        }
 
         if (this.isLoggedIn()) {
             if (callback != null) {
@@ -496,7 +556,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         if (client != null && client.isConnected()) {
             client.disconnect();
 
-            if (trySilentAuthentication == true) {
+            if (trySilentAuthentication) {
                 trySilentAuthentication = false;
                 activity.getPreferences(Activity.MODE_PRIVATE).edit().putBoolean(GP_SIGNED_IN_PREFERENCE, false);
             }
@@ -796,6 +856,29 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         else {
             Games.Achievements.unlock(client, achievementID);
         }
+    }
+
+    public void addScore(final long scoreToAdd, final String leaderboardID, final CompletionCallback callback) {
+        Games.Leaderboards.loadCurrentPlayerLeaderboardScore(client, leaderboardID, LeaderboardVariant.TIME_SPAN_ALL_TIME, LeaderboardVariant.COLLECTION_PUBLIC).setResultCallback(new ResultCallback<Leaderboards.LoadPlayerScoreResult>() {
+            @Override
+            public void onResult(final Leaderboards.LoadPlayerScoreResult scoreResult) {
+                if (scoreResult != null) {
+                    if (GamesStatusCodes.STATUS_OK == scoreResult.getStatus().getStatusCode()) {
+                        long score = 0;
+                        if (scoreResult.getScore() != null) {
+                            score = scoreResult.getScore().getRawScore();
+                        }
+                        Games.Leaderboards.submitScore(client, leaderboardID, score + scoreToAdd);
+                        if (callback != null) {
+                            callback.onComplete(null);
+                        }
+                    }
+                }
+                else if (callback != null) {
+                    callback.onComplete(new Error("Error fetching user score",0));
+                }
+            }
+        });
     }
 
     public void shareMessage(ShareData data, CompletionCallback callback)
