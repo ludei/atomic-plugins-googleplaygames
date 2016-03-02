@@ -1,16 +1,17 @@
 package com.ludei.googleplaygames;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 
-import com.google.android.gms.auth.UserRecoverableAuthException;
+import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -31,15 +32,16 @@ import com.google.android.gms.games.snapshot.Snapshots;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusShare;
 import com.google.android.gms.plus.model.people.Person;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.ludei.multiplayer.MultiplayerMatch;
 
+import org.apache.cordova.LOG;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -177,6 +179,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     protected static final String[] defaultScopes = new String[]{Scopes.GAMES, Scopes.PLUS_LOGIN};
     protected ArrayList<String> scopes = new ArrayList<String>();
     protected CompletionCallback intentCallback;
+    protected CompletionCallback permissionsCallback;
     protected SavedGameCallback intentSavedGameCallback;
     protected ArrayList<SessionCallback> loginCallbacks = new ArrayList<SessionCallback>();
     protected String authToken;
@@ -186,11 +189,19 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
     protected Executor executor;
     protected Runnable errorDialogCallback;
 
+    protected Runnable requestPermission = null;
+
     public GPGService(Activity activity)
     {
         sharedInstance = this;
         this.activity = activity;
         this.trySilentAuthentication = this.activity.getPreferences(Activity.MODE_PRIVATE).getBoolean(GP_SIGNED_IN_PREFERENCE, false);
+        this.requestPermission = new Runnable() {
+            @Override
+            public void run() {
+                GPGService.this.requestPermission();
+            }
+        };
     }
 
     public void init() {
@@ -227,6 +238,10 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         sharedInstance = null;
     }
 
+    public void setRequestPermission(Runnable task) {
+        requestPermission = task;
+    }
+
     public void setSessionListener(SessionCallback listener)
     {
         this.sessionListener = listener;
@@ -239,6 +254,21 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
     public void setExecutor(Executor executor) {
         this.executor = executor;
+    }
+
+    public boolean handleRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == GPGService.REQUEST_PERMISSIONS_GET_ACCOUNTS) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                permissionsCallback.onComplete(new Error("GET_ACCOUNTS permission not granted", -1));
+
+            } else {
+                permissionsCallback.onComplete(null);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public boolean handleActivityResult(final int requestCode, final int resultCode, final Intent intent) {
@@ -549,7 +579,21 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
             this.createClient();
         }
 
-        client.connect();
+        if (hasPermission()) {
+            client.connect();
+
+        } else {
+            permissionsCallback = new CompletionCallback() {
+                @Override
+                public void onComplete(Error error) {
+                    if (error == null)
+                        client.connect();
+                    else
+                        callback.onComplete(null, error);
+                }
+            };
+            requestPermission.run();
+        }
     }
 
     public void logout(CompletionCallback callback) {
@@ -912,4 +956,45 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
             this.willStartListener.onWillStartActivity();
         }
     }
+
+    private boolean hasPermission() {
+        try {
+            Method checkSelfPermission = Activity.class.getMethod("checkSelfPermission", String.class);
+            int hasWriteContactsPermission = (Integer)checkSelfPermission.invoke(this.activity, Manifest.permission.GET_ACCOUNTS);
+            if (hasWriteContactsPermission != PackageManager.PERMISSION_GRANTED)
+                return false;
+
+        } catch (NoSuchMethodException e) {
+            LOG.d(this.getClass().getSimpleName(), "No need to check for permission " + Manifest.permission.GET_ACCOUNTS);
+            return false;
+
+        } catch (InvocationTargetException e) {
+            LOG.e(this.getClass().getSimpleName(), "invocationTargetException when checking permission " + Manifest.permission.GET_ACCOUNTS, e);
+            return false;
+
+        } catch (IllegalAccessException e) {
+            LOG.e(this.getClass().getSimpleName(), "IllegalAccessException when checking permission " + Manifest.permission.GET_ACCOUNTS, e);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void requestPermission() {
+        try {
+            Method requestPermission = Activity.class.getDeclaredMethod("requestPermissions", String[].class, int.class);
+            requestPermission.invoke(this.activity, new String[]{Manifest.permission.GET_ACCOUNTS}, REQUEST_PERMISSIONS_GET_ACCOUNTS);
+
+        } catch (NoSuchMethodException e) {
+            LOG.d(this.getClass().getSimpleName(), "No need to request permissions " + Manifest.permission.GET_ACCOUNTS);
+
+        } catch (InvocationTargetException e) {
+            LOG.e(this.getClass().getSimpleName(), "invocationTargetException when requesting permissions " + Manifest.permission.GET_ACCOUNTS, e);
+
+        } catch (IllegalAccessException e) {
+            LOG.e(this.getClass().getSimpleName(), "IllegalAccessException when requesting permissions " + Manifest.permission.GET_ACCOUNTS, e);
+        }
+    }
+
+    public static final int REQUEST_PERMISSIONS_GET_ACCOUNTS = 3001;
 }

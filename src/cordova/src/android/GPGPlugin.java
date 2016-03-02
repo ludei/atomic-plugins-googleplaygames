@@ -1,22 +1,26 @@
 package com.ludei.googleplaygames.cordova;
 
+import android.Manifest;
 import android.content.Intent;
+
 import com.ludei.googleplaygames.GPGService;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 
 public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallback, GPGService.WillStartActivityCallback {
@@ -28,6 +32,24 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
     @Override
     protected void pluginInitialize() {
         _service = new GPGService(this.cordova.getActivity());
+        _service.setRequestPermission(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Method requestPermission = CordovaInterface.class.getDeclaredMethod("requestPermissions", CordovaPlugin.class, int.class, String[].class);
+                    requestPermission.invoke(GPGPlugin.this.cordova, GPGPlugin.this, GPGService.REQUEST_PERMISSIONS_GET_ACCOUNTS, new String[]{Manifest.permission.GET_ACCOUNTS});
+
+                } catch (NoSuchMethodException e) {
+                    LOG.d(this.getClass().getSimpleName(), "No need to check for permission " + Manifest.permission.GET_ACCOUNTS);
+
+                } catch (IllegalAccessException e) {
+                    LOG.e(this.getClass().getSimpleName(), "IllegalAccessException when checking permission " + Manifest.permission.GET_ACCOUNTS, e);
+
+                } catch(InvocationTargetException e) {
+                    LOG.e(this.getClass().getSimpleName(), "invocationTargetException when checking permission " + Manifest.permission.GET_ACCOUNTS, e);
+                }
+            }
+        });
     }
 
     @Override
@@ -49,6 +71,10 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
         this._service.handleActivityResult(requestCode, resultCode, intent);
+    }
+
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        _service.handleRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
 
@@ -85,7 +111,6 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
 
     @SuppressWarnings("unused")
     public void authorize(CordovaArgs args, final CallbackContext ctx) throws JSONException {
-
         JSONObject obj = args.optJSONObject(0);
         String[] scopes = null;
         if (obj != null) {
