@@ -966,7 +966,7 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
 
         } catch (NoSuchMethodException e) {
             LOG.d(this.getClass().getSimpleName(), "No need to check for permission " + Manifest.permission.GET_ACCOUNTS);
-            return false;
+            return true;
 
         } catch (InvocationTargetException e) {
             LOG.e(this.getClass().getSimpleName(), "invocationTargetException when checking permission " + Manifest.permission.GET_ACCOUNTS, e);
