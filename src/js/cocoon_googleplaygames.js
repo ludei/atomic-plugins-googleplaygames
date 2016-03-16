@@ -80,7 +80,7 @@
              * @param {Object} params Initialization options.
              * @param {string} params.clientId The application clientID. Omit if its already provided in the native application via cloud configuration.
              * @param {string} params.defaultLeaderboard The default leaderboard ID. You can omit it if you specify the leaderboardID in all the score queries or submits.
-             * @param {array} params.scopes Additional scope identifiers. Plus & Games APIs are included by default. To use cloud saved game include the 'https://www.googleapis.com/auth/drive.appdata' scope.
+             * @param {array} params.scopes Additional scope identifiers. Plus & Games APIs are included by default. To use cloud saved game include the 'drive.appfolder' scope.
              * @param {boolean} params.showAchievementNotifications Enables or disables the native view notifications when an achievement is unlocked.
              * @param {function} callback The initialization completed callback. Received params: error
              */
