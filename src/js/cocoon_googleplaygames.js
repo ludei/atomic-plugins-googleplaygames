@@ -98,7 +98,7 @@
                         me.onSessionChanged.emit("sessionChanged",null, [data]);
                     });
 
-                    Cocoon.exec(this.serviceName, "init", [this.settings.clientId],function(error){
+                    Cocoon.exec(this.serviceName, "init", [me.settings], function(error){
                         if (callback) {
                             callback(error);
                         }
@@ -107,7 +107,7 @@
                 else {
 
                     var initWebAPi = function() {
-                        gapi.auth.authorize({immediate: true, scope: me.defaultScopes, client_id:me.settings.clientId},function(response) {
+                        gapi.auth.authorize({immediate:true, scope:me.settings.scopes, client_id:me.settings.clientId},function(response) {
                             me.token = response;
                             if (response && response.access_token) {
                                 me.onSessionChanged.notifyEventListeners(response);
@@ -413,7 +413,7 @@
             },
             login : function(callback) {
                 var me = this;
-                this.gapi.auth.authorize({client_id:this.gapi.settings.clientId, scope: this.gapi.defaultScopes}, function(response) {
+                this.gapi.auth.authorize({client_id:this.gapi.settings.clientId, scope: this.gapi.settings.scopes}, function(response) {
                     if (callback) {
                         callback(me.isLoggedIn(),response.error);
                     }
