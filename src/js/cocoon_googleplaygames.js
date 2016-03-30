@@ -173,11 +173,12 @@
                 window.open(this.href,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=600,width=600');
             },
 
-
             /**
              * Submit event
-             * @param {string} eventId
-             * @param {number} increment
+             * @memberof Cocoon.Social.GooglePlayGames
+             * @function submitEvent
+             * @param {string} eventId The event Id.
+             * @param {number} increment The amount the event will be incremented with.
              */
             submitEvent: function(eventId, increment) {
 
@@ -191,7 +192,9 @@
 
             /**
              * Loads a Saved Game Snapshot from the cloud
-             * @param identifier snapshot identifier
+             * @memberof Cocoon.Social.GooglePlayGames
+             * @function loadSavedGame
+             * @param {string} identifier snapshot identifier
              * @param {Function} callback The callback function. It receives the following parameters:
              * - Snapshot: Object with the title, description adn identifier of the snapshort. The data property contains the raw bytes converted to string.
              * - Error.
@@ -208,7 +211,13 @@
 
             /**
              * Writes a SavedGame Snapshot to the cloud
-             * @param snapshot snapshot object to store. An object with identifier, title, description and data properties. New snapshot is created if the identifier is a new one.
+             * @memberof Cocoon.Social.GooglePlayGames
+             * @function writeSavedGame
+             * @param {Object} snapshot snapshot object to store. New snapshot is created if the identifier is a new one. An object with:
+             * - Identifier
+             * - Title
+             * - Description
+             * - Data properties.
              * @param {Function} callback The callback function. It receives the following parameters:
              * - Error.
              */
@@ -222,8 +231,10 @@
                 }
              },
 
-             /**
+            /**
              * Show Google Play saved games activity and allows the user to choose a saved game or to create a new one
+             * @memberof Cocoon.Social.GooglePlayGames
+             * @function showSavedGames
              * @param {Function} callback The callback function. It receives the following parameters:
              * - Snapshot: The selected snapshot metada, use loadSavedGame to fetch its data. If the user creates a new snapshot the idenfier will be empty.
              * - Error.
