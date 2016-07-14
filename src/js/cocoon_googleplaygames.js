@@ -141,7 +141,7 @@
             },
 
             isLoggedIn: function() {
-                return this.session && this.session.playerId;
+                return !!(this.session && this.session.playerId);
             },
 
             /**
