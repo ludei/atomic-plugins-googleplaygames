@@ -423,7 +423,10 @@
                         callback(null, error);
                     }
                     else {
-                        callback(new Cocoon.Social.Score(score || 0));
+                        var result = new Cocoon.Social.Score();
+                        result.score = score || 0;
+                        result.leaderboardID = leaderboardID;
+                        callback(result);
                     }
 
                 });
