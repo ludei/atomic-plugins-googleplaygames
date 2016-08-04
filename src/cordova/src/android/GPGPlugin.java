@@ -348,9 +348,9 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
     @SuppressWarnings("unused")
     public void loadPlayerStats(CordovaArgs args, final CallbackContext ctx) throws JSONException {
 
-        _service.loadPlayerStats(new GPGService2.RequestCallback() {
+        _service.loadPlayerStats(new GPGService.RequestCallback() {
             @Override
-            public void onComplete(JSONObject responseJSON, GPGService2.Error error) {
+            public void onComplete(JSONObject responseJSON, GPGService.Error error) {
                 if (responseJSON != null) {
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, responseJSON));
                 } else if (error != null) {
@@ -358,7 +358,7 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
                 }
                 // should never happen
                 else {
-                    error = new GPGService2.Error("Player Stats could not be accessed, no specific error code", 1);
+                    error = new GPGService.Error("Player Stats could not be accessed, no specific error code", 1);
                     ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
                 }
             }
