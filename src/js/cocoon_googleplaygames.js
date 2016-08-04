@@ -345,7 +345,21 @@
                     callback(null, error);
                 });
             },
-
+            /**
+             * Loads the player stats data for the current player. See for more info: https://developers.google.com/games/services/android/stats
+             * @function loadPlayerStats
+             * @memberOf Cocoon.Social.GooglePlayGames
+             * @param {function} callback The callback function. It receives the following parameters:
+             * - playerStats: Object with the player stats data
+             * - Error.
+             */
+            loadPlayerStats: function (callback) {
+                Cocoon.exec(this.serviceName, "loadPlayerStats", [], function (playerStats) {
+                    callback(playerStats, null);
+                }, function (error) {
+                    callback(null, error);
+                });
+            }
         };
 
         extension.GooglePlayGames = new extension.GooglePlayGamesExtension();

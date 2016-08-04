@@ -19,6 +19,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Result;
 import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.common.images.ImageManager;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.games.Games;
@@ -38,6 +39,9 @@ import com.google.android.gms.games.snapshot.SnapshotContents;
 import com.google.android.gms.games.snapshot.SnapshotMetadata;
 import com.google.android.gms.games.snapshot.SnapshotMetadataChange;
 import com.google.android.gms.games.snapshot.Snapshots;
+import com.google.android.gms.games.stats.PlayerStats;
+import com.google.android.gms.games.stats.Stats;
+import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -1247,6 +1251,42 @@ public class GPGService implements GoogleApiClient.ConnectionCallbacks, GoogleAp
         Games.Events.increment(client, eventId, increment);
     }
 
+    public void loadPlayerStats(final RequestCallback callback) {
+        PendingResult<Stats.LoadPlayerStatsResult> result =
+                Games.Stats.loadPlayerStats(
+                client, false /* forceReload */);
+        result.setResultCallback(new ResultCallback<Stats.LoadPlayerStatsResult>() {
+            public void onResult(Stats.LoadPlayerStatsResult result) {
+                Status status = result.getStatus();
+                if (status.isSuccess()) {
+                    PlayerStats stats = result.getPlayerStats();
+                    JSONObject data = new JSONObject();
+                    if (stats != null) {
+                        try {
+                            data.put("averageSessionLength", stats.getAverageSessionLength());
+                            data.put("churnProbability", stats.getChurnProbability());
+                            data.put("daysSinceLastPlayed", stats.getDaysSinceLastPlayed());
+                            data.put("highSpenderProbability", stats.getHighSpenderProbability());
+                            data.put("numberOfPurchases", stats.getNumberOfPurchases());
+                            data.put("numberOfSessions", stats.getNumberOfSessions());
+                            data.put("sessionPercentile", stats.getSessionPercentile());
+                            data.put("spendPercentile", stats.getSpendPercentile());
+                            data.put("spendProbability", stats.getSpendProbability());
+                            data.put("totalSpendNext28Days", stats.getTotalSpendNext28Days());
+                        }
+                        catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        callback.onComplete(data, new Error("Player stats fetched successfully",  GamesStatusCodes.STATUS_OK));
+                    } else {
+                        callback.onComplete(null, new Error("getPlayerStats returned 'null'",  GamesStatusCodes.STATUS_INTERNAL_ERROR));
+                    }
+                } else {
+                    callback.onComplete(null, new Error("status.isSuccess did not return 'true'",  GamesStatusCodes.STATUS_NETWORK_ERROR_NO_DATA));
+                }
+            }
+        });
+    }
 
     private void notifyWillStart()
     {

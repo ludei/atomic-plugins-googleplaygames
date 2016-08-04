@@ -341,10 +341,29 @@ public class GPGPlugin extends CordovaPlugin implements GPGService.SessionCallba
         if (increment == 0) {
             increment  = 1;
         }
-       _service.submitEvent(eventId, increment);
+        _service.submitEvent(eventId, increment);
         ctx.success();
     }
 
+    @SuppressWarnings("unused")
+    public void loadPlayerStats(CordovaArgs args, final CallbackContext ctx) throws JSONException {
+
+        _service.loadPlayerStats(new GPGService2.RequestCallback() {
+            @Override
+            public void onComplete(JSONObject responseJSON, GPGService2.Error error) {
+                if (responseJSON != null) {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.OK, responseJSON));
+                } else if (error != null) {
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION, new JSONObject(error.toMap())));
+                }
+                // should never happen
+                else {
+                    error = new GPGService2.Error("Player Stats could not be accessed, no specific error code", 1);
+                    ctx.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, new JSONObject(error.toMap())));
+                }
+            }
+        });
+    }
 
     //Session Listener
     @Override
