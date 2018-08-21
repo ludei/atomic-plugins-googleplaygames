@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" 
-        id="cocoon-plugin-social-android-googleplaygames" version="1.1.5">
+        id="cocoon-plugin-social-android-googleplaygames" version="2.0.0">
     <name>CocoonGooglePlayGames</name>
     <description>Android Google Play Games API</description>
     <license>MPL 2.0</license>
@@ -13,24 +13,24 @@
         <source-file src="src/android/GPUtils.java" target-dir="src/com/ludei/googleplaygames" />
         <source-file src="src/android/GPGPlugin.java" target-dir="src/com/ludei/googleplaygames/cordova" />
 
-        <config-file target="res/xml/config.xml" parent="/*">
+        <config-file target="app/src/main/res/xml/config.xml" parent="/*">
             <feature name="LDGooglePlayGamesPlugin" >
                 <param name="android-package" value="com.ludei.googleplaygames.cordova.GPGPlugin"/>
             </feature>
         </config-file>
 
-        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest/application">
             <meta-data
               android:name="com.google.android.gms.games.APP_ID"
               android:value="@string/app_id" />
         </config-file>
 
-        <config-file target="AndroidManifest.xml" parent="/manifest">
+        <config-file target="app/src/main/AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.INTERNET"/>
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
         </config-file>
 
-        <config-file target="res/values/strings.xml" parent="/resources">
+        <config-file target="app/src/main/res/values/strings.xml" parent="/resources">
             <string name="app_id">$APP_ID</string>
         </config-file>
 
@@ -43,5 +43,5 @@
 
     </platform>
 
-    <dependency id="cocoon-plugin-social-common" version="1.0.1" />
+    <dependency id="cocoon-plugin-social-common" />
 </plugin>
