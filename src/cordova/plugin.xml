@@ -34,8 +34,8 @@
             <string name="app_id">$APP_ID</string>
         </config-file>
 
-        <framework src="com.google.android.gms:play-services-games:9.0.2" />
-        <framework src="com.google.android.gms:play-services-plus:9.0.2" />
+        <framework src="com.google.android.gms:play-services-games:+" />
+        <framework src="com.google.android.gms:play-services-plus:+" />
 
         <js-module src="www/cocoon_googleplaygames.js" name="GooglePlayGames">
             <runs/>
